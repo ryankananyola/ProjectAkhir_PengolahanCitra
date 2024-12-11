@@ -131,9 +131,22 @@ function sliderContrast_Callback(hObject, eventdata, handles)
 
     % Tambahkan kecerahan pada gambar asli berdasarkan nilai brightness
     brightImage = citra + valueBri;
-    
-    % Tambahkan noise 'salt & pepper' pada gambar yang sudah diberi kecerahan
-    noise = imnoise(brightImage, 'salt & pepper', valueNoise);
+
+    % Tambahkan noise "salt & pepper" secara manual pada gambar yang sudah diberi kecerahan
+    noise = brightImage;
+    [rows, cols, channels] = size(noise);
+    for c = 1:channels
+        for i = 1:rows
+            for j = 1:cols
+                randValue = rand(); % Nilai acak antara 0 dan 1
+                if randValue < valueNoise / 2
+                    noise(i, j, c) = 0; % Salt (hitam)
+                elseif randValue < valueNoise
+                    noise(i, j, c) = 255; % Pepper (putih)
+                end
+            end
+        end
+    end
 
     % Terapkan efek blur pada gambar dengan menggunakan nilai blur
     blurImage = blur(noise, valueBlur);
@@ -186,9 +199,22 @@ function sliderBrightness_Callback(hObject, eventdata, handles)
     % Ambil gambar asli dari handles.image
     citra = handles.image;
     
-    % Tambahkan noise 'salt & pepper' berdasarkan nilai dari slider noise
-    noise = imnoise(citra, 'salt & pepper', valueNoise);
-    
+    % Tambahkan noise 'salt & pepper' secara manual berdasarkan nilai dari slider noise
+    noise = citra;
+    [rows, cols, channels] = size(noise);
+    for c = 1:channels
+        for i = 1:rows
+            for j = 1:cols
+                randValue = rand(); % Nilai acak antara 0 dan 1
+                if randValue < valueNoise / 2
+                    noise(i, j, c) = 0; % Salt (hitam)
+                elseif randValue < valueNoise
+                    noise(i, j, c) = 255; % Pepper (putih)
+                end
+            end
+        end
+    end
+
     % Mengatur kontras gambar dengan mengalikan noise + brightness dengan nilai kontras
     kontras = valueCon * (noise + valueBri);
     
@@ -214,7 +240,6 @@ function sliderBrightness_Callback(hObject, eventdata, handles)
     % Menampilkan histogram RGB dari gambar hasil olahan di axes7
     axes(handles.axes7);
     histogramRGB(G); % Fungsi untuk menampilkan histogram RGB
-
     
 
 
@@ -238,48 +263,97 @@ function grayScale_Callback(hObject, eventdata, handles)
     
     % Akses axes4 untuk menampilkan gambar hasil olahan di GUI
     axes(handles.axes4);
-    
-    % Mengubah gambar menjadi grayscale menggunakan fungsi rgb2gray
-    G = rgb2gray(G);
-    
+
+    % Perhitungan manual untuk mengubah gambar menjadi grayscale
+    % Asumsikan G adalah gambar RGB dengan dimensi MxNx3
+    if size(G, 3) == 3 % Memastikan gambar memiliki tiga channel (RGB)
+        % Menggunakan rumus luminance standar: Y = 0.2989 * R + 0.5870 * G + 0.1140 * B
+        R = G(:, :, 1); % Channel merah
+        G_channel = G(:, :, 2); % Channel hijau
+        B = G(:, :, 3); % Channel biru
+        
+        % Menghitung nilai grayscale
+        G = uint8(0.2989 * double(R) + 0.5870 * double(G_channel) + 0.1140 * double(B));
+    end
+
     % Menyimpan data handles jika ada perubahan
     guidata(hObject, handles);
-    
+
     % Menampilkan gambar grayscale di axes4 dengan scaling otomatis
     imshow(G, []);
-    
+
     % Akses axes7 untuk menampilkan histogram dari gambar hasil olahan
     axes(handles.axes7);
-    
+
     % Menampilkan histogram RGB dari gambar grayscale di axes7
-    histogramRGB(G); 
+    histogramRGB(G);
 
 
 % --- Executes on button press in negatif.
 function negatif_Callback(hObject, eventdata, handles)
 % Callback untuk tombol negatif
 
-global G; % Mendeklarasikan variabel global G yang akan digunakan dalam fungsi
-axes(handles.axes4); % Mengatur axes yang aktif menjadi axes4
-G = imcomplement(G); % Membuat citra negatif dari G menggunakan fungsi imcomplement
-guidata(hObject,handles); % Menyimpan perubahan data ke objek handle
-imshow(G,[]); % Menampilkan citra negatif pada axes yang telah diatur
-axes(handles.axes7); % Mengatur axes yang aktif menjadi axes7
-histogramRGB(G); % Menampilkan histogram RGB dari citra negatif
+    global G; % Mendeklarasikan variabel global G yang akan digunakan dalam fungsi
+    axes(handles.axes4); % Mengatur axes yang aktif menjadi axes4
 
+    % Perhitungan manual untuk membuat citra negatif
+    if size(G, 3) == 3 % Jika gambar memiliki 3 channel (RGB)
+        R = G(:, :, 1); % Channel merah
+        G_channel = G(:, :, 2); % Channel hijau
+        B = G(:, :, 3); % Channel biru
+
+        % Menghitung nilai negatif untuk setiap channel
+        R_neg = 255 - R;
+        G_neg = 255 - G_channel;
+        B_neg = 255 - B;
+
+        % Menggabungkan kembali channel untuk menghasilkan gambar negatif
+        G = cat(3, R_neg, G_neg, B_neg);
+    else % Untuk gambar grayscale
+        G = 255 - G;
+    end
+
+    guidata(hObject, handles); % Menyimpan perubahan data ke objek handle
+
+    % Menampilkan citra negatif pada axes yang telah diatur
+    imshow(G, []);
+
+    axes(handles.axes7); % Mengatur axes yang aktif menjadi axes7
+    histogramRGB(G);
 
 
 % --- Executes on button press in binary.
 function binary_Callback(hObject, eventdata, handles)
 % Callback untuk tombol binary
 
-global G; % Mendeklarasikan variabel global G yang akan digunakan dalam fungsi
-axes(handles.axes4); % Mengatur axes yang aktif menjadi axes4
-G = im2bw(G); % Mengubah citra menjadi biner (hitam-putih) menggunakan fungsi im2bw
-guidata(hObject,handles); % Menyimpan perubahan data ke objek handle
-imshow(G,[]); % Menampilkan citra biner pada axes4 dengan skala array untuk efek langsung
-axes(handles.axes7); % Mengatur axes yang aktif menjadi axes7
-histogramRGB(G); % Menampilkan histogram RGB dari citra biner G
+    global G; % Mendeklarasikan variabel global G yang akan digunakan dalam fungsi
+    axes(handles.axes4); % Mengatur axes yang aktif menjadi axes4
+
+    % Perhitungan manual untuk mengubah citra menjadi biner
+    threshold = 128; % Ambang batas untuk konversi biner (0-255)
+
+    if size(G, 3) == 3 % Jika gambar memiliki 3 channel (RGB)
+        % Konversi ke grayscale terlebih dahulu
+        R = G(:, :, 1); % Channel merah
+        G_channel = G(:, :, 2); % Channel hijau
+        B = G(:, :, 3); % Channel biru
+        
+        % Menggunakan rumus luminance standar untuk grayscale
+        grayscale = uint8(0.2989 * double(R) + 0.5870 * double(G_channel) + 0.1140 * double(B));
+    else
+        grayscale = G; % Jika sudah grayscale
+    end
+
+    % Mengubah ke citra biner berdasarkan ambang batas
+    G = uint8(grayscale >= threshold) * 255; % 255 untuk putih, 0 untuk hitam
+
+    guidata(hObject, handles); % Menyimpan perubahan data ke objek handle
+
+    % Menampilkan citra biner pada axes4 dengan skala array untuk efek langsung
+    imshow(G, []);
+
+    axes(handles.axes7); % Mengatur axes yang aktif menjadi axes7
+    histogramRGB(G); % Menampilkan histogram RGB dari citra biner G
 
 
 
@@ -337,8 +411,21 @@ kontras = valueCon * blurImage; % Menambahkan kontras dengan mengalikan nilai ko
 % Tambahkan sharpness (ketajaman) dengan nilai sesuai slider
 sharpenedImage = imsharpen(kontras, 'Radius', 2, 'Amount', valueSharp); % Menerapkan ketajaman pada gambar
 
-% Tambahkan noise dengan tipe salt & pepper
-noisyImage = imnoise(sharpenedImage, 'salt & pepper', valueNoise); % Menambahkan noise tipe salt & pepper
+% Tambahkan noise tipe salt & pepper secara manual
+noisyImage = sharpenedImage;
+[rows, cols, channels] = size(noisyImage);
+for c = 1:channels
+    for i = 1:rows
+        for j = 1:cols
+            randValue = rand(); % Nilai acak antara 0 dan 1
+            if randValue < valueNoise / 2
+                noisyImage(i, j, c) = 0; % Salt (hitam)
+            elseif randValue < valueNoise
+                noisyImage(i, j, c) = 255; % Pepper (putih)
+            end
+        end
+    end
+end
 
 % Menyimpan hasil akhir pada variabel global G
 G = noisyImage; % Mengatur gambar akhir sebagai G
@@ -350,7 +437,6 @@ imshow(G, []); % Menampilkan gambar hasil dengan scaling otomatis
 % Tampilkan histogram RGB dari gambar akhir di axes7
 axes(handles.axes7); % Memilih axes7 untuk menampilkan histogram RGB
 histogramRGB(G); % Menampilkan histogram RGB dari gambar hasil
-
 
     
 % --- Executes during object creation, after setting all properties.
@@ -379,8 +465,21 @@ function sliderBlur_Callback(hObject, eventdata, handles)
     valueCon = get(handles.sliderContrast, 'Value'); % Mengambil nilai kontras dari slider contrast
     valueBri = get(handles.sliderBrightness, 'Value'); % Mengambil nilai brightness dari slider brightness
 
-    % Tambahkan noise ke gambar
-    noise = imnoise(citra, 'salt & pepper', valueNoise); % Menambahkan noise tipe salt & pepper pada gambar
+    % Tambahkan noise tipe salt & pepper secara manual
+    noise = citra;
+    [rows, cols, channels] = size(noise);
+    for c = 1:channels
+        for i = 1:rows
+            for j = 1:cols
+                randValue = rand(); % Nilai acak antara 0 dan 1
+                if randValue < valueNoise / 2
+                    noise(i, j, c) = 0; % Salt (hitam)
+                elseif randValue < valueNoise
+                    noise(i, j, c) = 255; % Pepper (putih)
+                end
+            end
+        end
+    end
 
     % Tambahkan efek kontras menggunakan imadjust
     kontras = valueCon * (noise + valueBri); % Menambahkan efek kontras dengan mengalikan noise dengan nilai kontras
@@ -412,8 +511,6 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 
-
-
 function hslSliderBlur_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -437,11 +534,26 @@ function sliderNoise_Callback(hObject, eventdata, handles)
     valueCon = get(handles.sliderContrast, 'Value'); % Mengambil nilai slider kontras
     valueBri = get(handles.sliderBrightness, 'Value'); % Mengambil nilai slider kecerahan
 
-    % Tambahkan noise jenis salt & pepper sesuai nilai slider noise
-    noise = imnoise(citra, 'salt & pepper', valueNoise); % Menambahkan noise salt & pepper pada citra
+    % Perhitungan manual untuk menambahkan noise "salt & pepper"
+    [rows, cols, channels] = size(citra);
+    noiseDensity = valueNoise; % Kepadatan noise berdasarkan nilai slider
+
+    % Buat masker untuk noise salt & pepper
+    numNoisePixels = round(noiseDensity * rows * cols); % Hitung jumlah piksel yang akan diberi noise
+    saltMask = rand(rows, cols) < (noiseDensity / 2); % Masker untuk "salt"
+    pepperMask = rand(rows, cols) < (noiseDensity / 2); % Masker untuk "pepper"
+
+    % Terapkan noise pada gambar
+    noisyImage = citra;
+    for c = 1:channels
+        channel = noisyImage(:, :, c);
+        channel(saltMask) = 255; % Terapkan "salt" (putih)
+        channel(pepperMask) = 0;  % Terapkan "pepper" (hitam)
+        noisyImage(:, :, c) = channel;
+    end
 
     % Operasi kontras pada citra dengan nilai kontras dari slider
-    kontras = valueCon * (noise + valueBri); % Menerapkan kontras sesuai nilai slider dan menambah kecerahan
+    kontras = valueCon * (double(noisyImage) + valueBri); % Menerapkan kontras sesuai nilai slider dan menambah kecerahan
 
     % Tambahkan kecerahan sesuai nilai slider kecerahan
     cerah = kontras + valueBri; % Menambahkan efek kecerahan pada citra yang sudah diberikan kontras
@@ -466,7 +578,6 @@ function sliderNoise_Callback(hObject, eventdata, handles)
 
     % Tampilkan histogram RGB gambar akhir
     histogramRGB(G); % Menampilkan histogram RGB dari gambar hasil akhir
-
 
 % --- Executes during object creation, after setting all properties.
 function sliderNoise_CreateFcn(hObject, eventdata, handles)
@@ -505,26 +616,46 @@ function applyEDBtn_Callback(hObject, eventdata, handles)
 % eventdata  reservasi - akan didefinisikan di versi MATLAB mendatang
 % handles    struktur dengan handles dan data pengguna (lihat GUIDATA)
 
-global G; % Variabel global untuk menyimpan gambar
-axes(handles.axes4); % Pilih axes tempat gambar akan ditampilkan
-x = get(handles.popUpMenuED, 'Value'); % Ambil nilai dari pop-up menu (pilihan metode deteksi tepi)
+    global G; % Variabel global untuk menyimpan gambar
+    axes(handles.axes4); % Pilih axes tempat gambar akan ditampilkan
+    x = get(handles.popUpMenuED, 'Value'); % Ambil nilai dari pop-up menu (pilihan metode deteksi tepi)
 
-switch x
-    case 1 % Pilihan 1: deteksi tepi metode Canny
-        imagedouble = double(rgb2gray(G)); % Konversi gambar menjadi grayscale, lalu menjadi tipe double
-        G = edge(imagedouble, 'canny'); % Terapkan deteksi tepi menggunakan metode Canny
-    case 2 % Pilihan 2: deteksi tepi metode Sobel
-        imagedouble = double(rgb2gray(G)); % Konversi gambar ke grayscale dan tipe double
-        G = edge(imagedouble, 'sobel'); % Terapkan deteksi tepi menggunakan metode Sobel
-    case 3 % Pilihan 3: deteksi tepi metode Prewitt
-        imagedouble = double(rgb2gray(G)); % Konversi gambar ke grayscale dan tipe double
-        G = edge(imagedouble, 'prewitt'); % Terapkan deteksi tepi menggunakan metode Prewitt
-end
+    % Konversi gambar ke grayscale jika RGB
+    if size(G, 3) == 3
+        grayscale = double(rgb2gray(G));
+    else
+        grayscale = double(G);
+    end
 
-guidata(hObject, handles); % Simpan perubahan pada handles
-imshow(G, []); % Tampilkan gambar hasil deteksi tepi pada axes yang ditentukan
-axes(handles.axes7); % Pilih axes untuk histogram
-histogramRGB(G); % Tampilkan histogram RGB gambar
+    % Inisialisasi kernel untuk Sobel dan Prewitt
+    sobelX = [-1 0 1; -2 0 2; -1 0 1];
+    sobelY = [-1 -2 -1; 0 0 0; 1 2 1];
+
+    prewittX = [-1 0 1; -1 0 1; -1 0 1];
+    prewittY = [-1 -1 -1; 0 0 0; 1 1 1];
+
+    switch x
+        case 1 % Pilihan 1: deteksi tepi metode Canny (manual belum diimplementasikan)
+            G = edge(grayscale, 'canny'); % Tetap menggunakan metode bawaan untuk Canny
+        case 2 % Pilihan 2: deteksi tepi metode Sobel
+            gradX = conv2(grayscale, sobelX, 'same'); % Konvolusi dengan kernel Sobel X
+            gradY = conv2(grayscale, sobelY, 'same'); % Konvolusi dengan kernel Sobel Y
+            G = sqrt(gradX.^2 + gradY.^2); % Magnitudo gradien
+            G = uint8(G / max(G(:)) * 255); % Normalisasi ke rentang 0-255
+        case 3 % Pilihan 3: deteksi tepi metode Prewitt
+            gradX = conv2(grayscale, prewittX, 'same'); % Konvolusi dengan kernel Prewitt X
+            gradY = conv2(grayscale, prewittY, 'same'); % Konvolusi dengan kernel Prewitt Y
+            G = sqrt(gradX.^2 + gradY.^2); % Magnitudo gradien
+            G = uint8(G / max(G(:)) * 255); % Normalisasi ke rentang 0-255
+    end
+
+    guidata(hObject, handles); % Simpan perubahan pada handles
+
+    % Tampilkan gambar hasil deteksi tepi pada axes yang ditentukan
+    imshow(G, []);
+
+    axes(handles.axes7); % Pilih axes untuk histogram
+    histogramRGB(G);
 
 
 % --- Executes on button press in redBTN.
@@ -581,71 +712,3 @@ axes(handles.axes7);
 %histogramRGB(G);
 histogram(G(:),256,'FaceColor','b','EdgeColor','b')
 
-
-% --- Executes on button press in camBTN.
-function camBTN_Callback(hObject, eventdata, handles)
-% hObject    handle to camBTN (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global vid; % Variabel global untuk objek video
-    vid = videoinput('winvideo', 1); % Inisialisasi kamera (pastikan tipe adaptor sesuai)
-    set(vid, 'ReturnedColorSpace', 'rgb'); % Set warna ke RGB
-    vid.FramesPerTrigger = 1; % Set jumlah frame per trigger
-    start(vid); % Mulai kamera
-    
-    while ishandle(hObject) % Loop untuk real-time feed
-        % Ambil gambar dari kamera
-        frame = getsnapshot(vid); 
-        
-        % Terapkan fitur yang dipilih
-        feature = getSelectedFeature(handles); % Dapatkan fitur yang dipilih
-        
-        switch feature
-            case 'Grayscale'
-                frameProcessed = rgb2gray(frame);
-            case 'Negatif'
-                frameProcessed = imcomplement(frame);
-            case 'Binary'
-                frameProcessed = imbinarize(rgb2gray(frame), 0.5);
-            case 'Red'
-                frameProcessed = frame(:,:,1); % Hanya kanal merah
-            case 'Green'
-                frameProcessed = frame(:,:,2); % Hanya kanal hijau
-            case 'Blue'
-                frameProcessed = frame(:,:,3); % Hanya kanal biru
-            % Tambahkan fitur lain sesuai kebutuhan
-            otherwise
-                frameProcessed = frame; % Default tanpa efek
-        end
-        
-        % Tampilkan gambar asli di axes3
-        axes(handles.axes3);
-        imshow(frame);
-        
-        % Tampilkan gambar dengan fitur di axes4
-        axes(handles.axes4);
-        imshow(frameProcessed);
-        
-        % Perbarui GUI
-        drawnow;
-    end
-    
-    % Fungsi untuk mendapatkan fitur yang dipilih
-    function feature = getSelectedFeature(handles)
-        % Dapatkan fitur yang dipilih berdasarkan tombol atau dropdown yang aktif
-        if get(handles.radioButtonGrayscale, 'Value')
-            feature = 'Grayscale';
-        elseif get(handles.radioButtonNegatif, 'Value')
-            feature = 'Negatif';
-        elseif get(handles.radioButtonBinary, 'Value')
-            feature = 'Binary';
-        elseif get(handles.radioButtonRed, 'Value')
-            feature = 'Red';
-        elseif get(handles.radioButtonGreen, 'Value')
-            feature = 'Green';
-        elseif get(handles.radioButtonBlue, 'Value')
-            feature = 'Blue';
-        else
-            feature = 'Original';
-        end
-    

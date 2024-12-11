@@ -1,0 +1,19 @@
+Tutorial Jalankan Program Pengolahan Citra 123220120-123220195-123220198
+
+Catatan : Karena program yang kami buat itu menggunakan matlab, dan untuk menjalankan file exe nya kita harus menginstal "compiler matlab runtime".
+
+Langkah-langkah (bagi yang belum pernah menginstal / belum pernah menjalankan file exe hasil gui matlab) :
+1. Pergi ke situs "https://www.mathworks.com/products/compiler/matlab-runtime.html"
+2. Kemudian download compiler tersebut (berukuran kurang lebih 1,8 gb) dan ada banyak versi, disesuaikan dengan versi matlab yang terinstal pada laptop pengguna. (pembuat program menggunakan versi R2019a)
+3. Setelah selesai download, buka matlab runtime yang sudah di download kemudian instal hingga selesai (tinggal next-next saja sampai finish).
+4. Kemudian setelah terinstal, download file exe "ProjekCitra120195198.exe" yang ada di gdrive ini.
+5. Setelah selesai di download, tinggal dijalankan.
+
+
+Langkah-langkah (bagi yang mau menggunakan matlab secara langsung) :
+1. Download file zip "ProjekCitra120-195-198_Done.zip" kemudian di ekstrak.
+2. Setelah di ekstrak, buka matlab dan buka folder yang sudah di ekstrak.
+3. Kemudian pilih file "ProjekCitra.m" dan running.
+4. Program siap dijalankan.
+
+Terimakasih 🙌😁
